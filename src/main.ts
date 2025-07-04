@@ -1,7 +1,7 @@
 import '@/static/index.css';
 import '@/static/styles.css';
 
-import type { Editor, MarkdownFileInfo } from 'obsidian';
+import type { Editor, MarkdownFileInfo, TAbstractFile } from 'obsidian';
 import { MarkdownView, Notice, Plugin, TFolder } from 'obsidian';
 
 //settings
@@ -563,10 +563,19 @@ export default class TickTickSync extends Plugin {
 			}
 		}));
 
-		//Listen to the rename event and update the path in task data
-		this.registerEvent(this.app.vault.on('rename', async (file, oldPath) => {
-			if (file instanceof TFolder || !getSettings().token) {
-				//individual file rename will be handled. I hope.
+		/* Listen to the rename event and update the path in task data
+		When a folder is renamed,
+			first triggered event for TFolder
+			next triggered event for each subfolder and files
+		*/
+		this.registerEvent(this.app.vault.on('rename', async (file: TAbstractFile, oldPath: string) => {
+			log.debug('on rename', file.path, file.name, oldPath);
+			if (!getSettings().token) { //not logged in
+				return;
+			}
+			if (file instanceof TFolder) {
+				//we don't know if there are task files in the this folder, so
+				//individual file rename will be handle it. I hope.
 				return;
 			}
 			const updated = await this.service.renamedFileCheck(file.path, oldPath);
@@ -579,7 +588,7 @@ export default class TickTickSync extends Plugin {
 		//Listen for file modified events and execute fullTextNewTaskCheck
 		this.registerEvent(this.app.vault.on('modify', async (file) => {
 			try {
-				// log.debug('modified.', file.name);
+				log.debug('modify.', file.name);
 				if (!getSettings().token) {
 					return;
 				}
@@ -602,6 +611,10 @@ export default class TickTickSync extends Plugin {
 
 		this.registerEvent(this.app.workspace.on('active-leaf-change', async (leaf) => {
 			await this.setStatusBarText();
+		}));
+
+		this.registerEvent(this.app.vault.on('delete', async (file) => {
+			log.debug('deleted', file.name);
 		}));
 	}
 

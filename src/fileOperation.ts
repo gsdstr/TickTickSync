@@ -5,6 +5,7 @@ import { TaskDeletionModal } from './modals/TaskDeletionModal';
 import { getSettings } from '@/settings';
 import { FileMap } from '@/services/fileMap';
 import log from 'loglevel';
+import path from 'path';
 
 export class FileOperation {
 	app: App;
@@ -200,18 +201,19 @@ export class FileOperation {
 			}
 			//TODO: When we implement this, beware case sensitivity.!
 
-			// if (getSettings().keepProjectFolders && taskFile.includes('/')){
-			// 	const groupName = taskFile.substring(0, taskFile.indexOf('/'));
-			// 	const folderPath = (getSettings().TickTickTasksFilePath === '/' ?
-			// 		'' :
-			// 		(getSettings().TickTickTasksFilePath + '/'))
-			// 		+ groupName
-			// 	const groupFolder = this.app.vault.getAbstractFileByPath(folderPath);
-			// 	if (!(groupFolder instanceof TFolder)) {
-			// log.warn(`Folder ${folderPath} does not exit. It will be created`);
-			// 		await this.app.vault.createFolder(folderPath);
-			// 	}
-			// }
+			if (getSettings().keepProjectFolders && taskFile.includes('/')){
+				const groupName = path.dirname(taskFile); // gets the directory path
+				// const groupName = taskFile.substring(0, taskFile.indexOf('/'));
+				const folderPath = (getSettings().TickTickTasksFilePath === '/' ?
+					'' :
+					(getSettings().TickTickTasksFilePath + '/'))
+					+ groupName
+				const groupFolder = this.app.vault.getAbstractFileByPath(folderPath);
+				if (!(groupFolder instanceof TFolder)) {
+					log.warn(`Folder ${folderPath} does not exit. It will be created`);
+					await this.app.vault.createFolder(folderPath);
+				}
+			}
 			new Notice(`Creating new file: ${folder.path}/${taskFile}`);
 			log.warn(`Creating new file: ${folder.path}/${taskFile}`);
 			taskFile = `${folder.path}/${taskFile}`;
@@ -246,7 +248,7 @@ export class FileOperation {
 			return file;
 		} catch (error) {
 			log.error('Error on create file: ', error);
-			throw new Error(error);
+			throw error;
 		}
 	}
 

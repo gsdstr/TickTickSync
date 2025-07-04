@@ -3,11 +3,11 @@ import TickTickSync from '@/main';
 import type { ITask } from '@/api/types/Task';
 import type { IProject } from '@/api/types//Project';
 import { FoundDuplicatesModal } from '@/modals/FoundDuplicatesModal';
-import { getProjects, getSettings, getTasks, updateProjects, updateSettings, updateTasks } from '@/settings';
+import { getProjects, getProjectGroups, getSettings, getTasks, updateProjects, updateSettings, updateTasks } from '@/settings';
 //Logging
 import log from '@/utils/logger';
 import { FileMap } from '@/services/fileMap';
-
+import path from 'path';
 
 export interface FileMetadata {
 	[fileName: string]: FileDetail;
@@ -292,7 +292,7 @@ export class CacheOperation {
 			}
 		}
 		//otherwise, return the project name as a md file and hope for the best.
-		const filePath = await this.getProjectNameByIdFromCache(projectId/*, getSettings().keepProjectFolders*/);
+		const filePath = await this.getProjectNameByIdFromCache(projectId, getSettings().keepProjectFolders);
 		if (!filePath) {
 			//Not a file that's in fileMetaData, not the inbox no default project set
 			const errmsg = `File path not found for ${projectId}, returning ${filePath} instead.`;
@@ -553,15 +553,15 @@ export class CacheOperation {
 		}
 	}
 
-	async getProjectNameByIdFromCache(projectId: string /*, addFolder: boolean = false*/): Promise<string | undefined> {
+	async getProjectNameByIdFromCache(projectId: string, addFolder: boolean = false): Promise<string | undefined> {
 		try {
 			const savedProjects = getProjects();
 			const targetProject = savedProjects.find(obj => obj.id === projectId);
 			if (!targetProject) return undefined;
-			// if (addFolder) {
-			// 	const groupName = getProjectGroups().find(g => g.id == targetProject.groupId)?.name;
-			// 	if (groupName) return groupName + '/' + targetProject.name;
-			// }
+			if (addFolder) {
+				const groupName = getProjectGroups().find(g => g.id == targetProject.groupId)?.name;
+				if (groupName) return path.join(groupName, targetProject.name);
+			}
 			return targetProject.name;
 		} catch (error) {
 			log.error(`Error finding project from Cache file: ${error}`);

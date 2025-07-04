@@ -13,7 +13,7 @@ export function init(plugin: TickTickSync) {
 		subscribe,
 		update,
 		// save the plugin values when setting the store
-		set: (value: TickTickSyncSettings) => {
+		set: (value: ITickTickSyncSettings) => {
 			set(value);
 			plugin.saveSettings();
 		},

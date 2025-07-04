@@ -9,6 +9,7 @@ import { FileOperation } from '@/fileOperation';
 import { FileMap } from '@/services/fileMap';
 //Logging
 import log from '@/utils/logger';
+import path from 'path';
 
 
 const LOCK_TASKS = 'LOCK_TASKS';
@@ -150,11 +151,15 @@ export class TickTickService {
 	}
 
 	async renamedFileCheck(filePath: string, oldPath: string): Promise<boolean> {
-		// log.debug(`${oldPath} is renamed`)
+		const oldDir = path.dirname(oldPath)
+		const oldName = path.basename(oldPath)
+		const dir = path.dirname(filePath)
+		const name = path.basename(filePath)
+		log.debug(`renamedFileCheck: ${oldDir} ${oldName} is renamed to ${dir} ${name}`)
 		//Read fileMetadata
 		//const fileMetadata = await this.fileOperation.getFileMetadata(file)
 		const fileMetadata = await this.cacheOperation?.getFileMetadata(oldPath, null);
-		if (!fileMetadata || !fileMetadata.TickTickTasks) {
+		if (!fileMetadata || !fileMetadata.TickTickTasks || !fileMetadata.TickTickTasks.length) {
 			//log.debug('There is no task in the deleted file')
 			return false;
 		}

@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { getSettings, updateSettings } from '@/settings';
-	import type TickTickSync from '@/main';
-	import log from '@/utils/logger';
-	import { onMount } from 'svelte';
-	import {LOG_LEVEL} from '@/ui/settings/svelte/constants.svelte.js';
-	import './SettingsStyles.css';
-
+	import { getSettings, updateSettings } from "@/settings";
+	import type TickTickSync from "@/main";
+	import log from "@/utils/logger";
+	import { onMount } from "svelte";
+	import { LOG_LEVEL } from "@/ui/settings/svelte/constants.svelte.js";
+	import "./SettingsStyles.css";
+	import { Notice } from "obsidian";
 	export let plugin: TickTickSync;
 
 	let debugMode: boolean = false;
@@ -17,6 +17,19 @@
 		await plugin.saveSettings();
 	}
 
+	async function handleCleanCache() {
+		updateSettings({
+			checkPoint: 0,
+			fileMetadata: {},
+			TickTickTasksData: { projects: [], projectGroups: [], tasks: [] },
+		});
+		await plugin.saveSettings();
+		if (plugin.service.api) plugin.service.api.checkpoint = 0;
+		if (plugin.tickTickRestAPI && plugin.tickTickRestAPI.api) plugin.tickTickRestAPI.api.checkpoint = 0;
+		await plugin.service.synchronization();
+		new Notice("Cache cleaned.");
+	}
+
 	onMount(async () => {
 		debugMode = getSettings().debugMode;
 	});
@@ -26,7 +39,9 @@
 	<div class="setting-item">
 		<div class="setting-item-info">
 			<div class="setting-item-name">Debug mode</div>
-			<div class="setting-item-description">Allow access to developer settings</div>
+			<div class="setting-item-description">
+				Allow access to developer settings
+			</div>
 		</div>
 		<div class="setting-item-control">
 			<label class="toggle-switch">
@@ -34,11 +49,11 @@
 					type="checkbox"
 					bind:checked={debugMode}
 					on:change={async (e) => {
-							const checked = e.target.checked;
-							debugMode = checked; // Ensure local state stays in sync
-							updateSettings({ debugMode: checked });
-							await plugin.saveSettings();
-					  }}
+						const checked = e.target.checked;
+						debugMode = checked; // Ensure local state stays in sync
+						updateSettings({ debugMode: checked });
+						await plugin.saveSettings();
+					}}
 				/>
 				<span class="slider"></span>
 			</label>
@@ -55,10 +70,11 @@
 				<select
 					value={getSettings().logLevel}
 					on:change={async (e) => {
-            updateSettings({ logLevel: e.target.value });
-            await plugin.saveSettings(true);
-            log.setLevel(e.target.value);
-          }}>
+						updateSettings({ logLevel: e.target.value });
+						await plugin.saveSettings(true);
+						log.setLevel(e.target.value);
+					}}
+				>
 					{#each Object.entries(LOG_LEVEL) as [value, label]}
 						<option {value}>{label}</option>
 					{/each}
@@ -69,7 +85,9 @@
 		<div class="setting-item">
 			<div class="setting-item-info">
 				<div class="setting-item-name">Skip backup</div>
-				<div class="setting-item-description">Skip backup on startup</div>
+				<div class="setting-item-description">
+					Skip backup on startup
+				</div>
 			</div>
 			<div class="setting-item-control">
 				<label class="toggle-switch">
@@ -77,17 +95,50 @@
 						type="checkbox"
 						checked={getSettings().skipBackup}
 						on:change={async (e) => {
-              updateSettings({ skipBackup: e.target.checked });
-              await plugin.saveSettings();
-            }}
+							updateSettings({ skipBackup: e.target.checked });
+							await plugin.saveSettings();
+						}}
 					/>
 					<span class="slider"></span>
 				</label>
+			</div>
+		</div>
 
+		<div class="setting-item">
+			<div class="setting-item-info">
+				<div class="setting-item-name">Keep project folders</div>
+				<div class="setting-item-description">
+					Sync group and project tree to folders structure in TickTick
+				</div>
+			</div>
+			<div class="setting-item-control">
+				<label class="toggle-switch">
+					<input
+						type="checkbox"
+						checked={getSettings().keepProjectFolders}
+						on:change={async (e) => {
+							//TODO: ask user about full resync?
+							updateSettings({
+								keepProjectFolders: e.target.checked,
+							});
+							await plugin.saveSettings();
+						}}
+					/>
+					<span class="slider"></span>
+				</label>
+			</div>
+		</div>
+
+		<div class="setting-item">
+			<div class="setting-item-info">
+				<div class="setting-item-name">Clean cache</div>
+				<div class="setting-item-description">Clean cache</div>
+			</div>
+			<div class="setting-item-control">
+				<button class="mod-cta" on:click={handleCleanCache}>
+					Clean cache and sync
+				</button>
 			</div>
 		</div>
 	{/if}
 </div>
-
-
-

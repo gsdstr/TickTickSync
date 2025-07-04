@@ -2,7 +2,8 @@ import log from 'loglevel';
 
 /* Use loglevel to do our logging because it keeps the line numbers in the console clickable
 *  with sincerest thanks to https://github.com/Mr0grog of https://github.com/pimterry for providing
-*  https://github.com/pimterry/loglevel/issues/207*/
+*  https://github.com/pimterry/loglevel/issues/207
+*/
 
 const prefix = '[TickTickSync]';
 
