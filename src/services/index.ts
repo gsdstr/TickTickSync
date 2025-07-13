@@ -169,6 +169,9 @@ export class TickTickService {
 		// }
 
 		await doWithLock(LOCK_TASKS, async () => {
+			if (oldDir !== dir) {
+				await this.tickTickSync.checkProjectGroups(dir, oldDir);
+			}
 			await this.tickTickSync.updateTaskContent(filePath);
 			await this.cacheOperation.updateRenamedFilePath(oldPath, filePath);
 		});

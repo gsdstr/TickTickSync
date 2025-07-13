@@ -319,10 +319,9 @@ export class CacheOperation {
 	}
 
 	//Read all tasks from Cache
-	async loadTasksFromCache() {
+	async loadTasksFromCache(): Promise<ITask[]> {
 		try {
-			const savedTasks = getTasks();
-			return savedTasks;
+			return getTasks();
 		} catch (error) {
 			log.error(`Error loading tasks from Cache: ${error}`);
 			return [];
@@ -330,7 +329,7 @@ export class CacheOperation {
 	}
 
 	// Overwrite and save all tasks to cache
-	async saveTasksToCache(newTasks) {
+	async saveTasksToCache(newTasks: ITask[]) {
 		try {
 			updateTasks(newTasks);
 
@@ -637,6 +636,7 @@ export class CacheOperation {
 		return false;
 	}
 
+	//TODO: obj.path not exists
 	async updateRenamedFilePath(oldpath: string, newpath: string) {
 		try {
 			// log.debug(`oldpath is ${oldpath}`)

@@ -118,6 +118,14 @@ export const getProjectGroups = (): IProjectGroup[] => {
 };
 
 export const updateProjectGroups = (newProjectGroups: IProjectGroup[]): IProjectGroup[] => {
+	//TODO: compare all group name
+	const groups = getProjectGroups();
+	for (const group of groups) {
+		const newGroup = newProjectGroups.find((g) => g.id === group.id);
+		if (newGroup && newGroup.name !== group.name) {
+			//TODO: update group name and path
+		}
+	}
 	settings.TickTickTasksData.projectGroups = newProjectGroups;
 	return getProjectGroups();
 };

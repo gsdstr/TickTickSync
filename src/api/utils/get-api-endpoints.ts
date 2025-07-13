@@ -20,7 +20,8 @@ const API_ENDPOINTS = {
 	getAllCompletedItems: 'project/all/completedInAll/',
 	exportData: 'data/export',
 	projectMove: 'batch/taskProject',
-	parentMove: `batch/taskParent`
+	parentMove: `batch/taskParent`,
+	projectGroup: 'batch/projectGroup'
 };
 
 /*

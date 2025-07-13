@@ -13,7 +13,7 @@ import type { ITask } from '@/api/types/Task';
 import ObjectID from 'bson-objectid';
 import type { TaskDetail } from '@/services/cacheOperation';
 import { TaskDeletionModal } from '@/modals/TaskDeletionModal';
-import { getSettings, updateProjectGroups } from '@/settings';
+import { getProjectGroups, getSettings, updateProjectGroups } from '@/settings';
 import { FileMap, getTitle, type ITaskItemRecord } from '@/services/fileMap';
 import log from 'loglevel';
 
@@ -23,6 +23,7 @@ type deletedTask = {
 }
 
 export class SyncMan {
+
 	private readonly app: App;
 	private readonly plugin: TickTickSync;
 
@@ -1433,5 +1434,13 @@ export class SyncMan {
 		return null; // Return null if no task or item is found for the given line number
 	}
 
+	async checkProjectGroups(dir: string, oldDir: string) {
+		const projectGroups = getProjectGroups();
+		const projectGroup = projectGroups.find((group) => group.name === dir);
+		if (!projectGroup) {
+			await this.plugin.tickTickRestAPI?.createProjectGroup(dir);
+		}
+		updateProjectGroups(projectGroups);
+	}
 
 }
