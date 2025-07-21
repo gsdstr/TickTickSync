@@ -857,7 +857,7 @@ export class Tick {
 	// POST https://api.ticktick.com/api/v2/batch/projectGroup
 	// body {"add":[{"showAll":true,"open":false,"name":"test_f3/1","sortOrder":-8796093022208,"teamId":null,"listType":"group","sortType":"","id":"686cdb3bf0f9f538c8545f00"}],"update":[],"delete":[]}
 	// response {"id2etag":{"686cdb3bf0f9f538c8545f00":"rdjk2swt"},"id2error":{}}
-	async createProjectGroup(name: string) {
+	async createProjectGroup(name: string): Promise<boolean> {
 		const url = `${this.apiUrl}/${projectGroup}`;
 		const body = {
 			add: [{
@@ -874,6 +874,8 @@ export class Tick {
 			delete: []
 		};
 		const response = await this.makeRequest('Create Project Group', url, 'POST', body);
-		return response;
+		// response ex
+		// {"id2etag":{"687a4b44f0f9f537a7ec997e":"tml1f84s"},"id2error":{}}
+		return Object.keys(response.id2error).length === 0;
 	}
 }

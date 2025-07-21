@@ -175,10 +175,54 @@ export class TickTickService {
 		// }
 
 		await doWithLock(LOCK_TASKS, async () => {
-			if (oldDir !== dir) {
-				await this.tickTickSync.checkProjectGroups(dir, oldDir);
+			let projectId = null;
+			if (oldDir !== dir && getSettings().keepProjectFolders) {
+				const newProjectGroup = await this.tickTickSync.checkProjectGroups(dir, oldDir);
+				// TODO
+				// POST https://api.ticktick.com/api/v2/batch/project
+				/*
+				{
+					"add": [],
+					"update": [
+						{
+						"timeline": null,
+						"openToTeam": false,
+						"color": null,
+						"userCount": 1,
+						"barcodeNeedAudit": false,
+						"needAudit": true,
+						"teamMemberPermission": null,
+						"transferred": null,
+						"viewMode": "list",
+						"isOwner": true,
+						"muted": false,
+						"name": "👋Welcome",
+						"closed": null,
+						"reminderType": 1,
+						"permission": null,
+						"sortOrder": -8246337208320,
+						"notificationOptions": null,
+						"sortOption": {
+							"groupBy": "sortOrder",
+							"orderBy": "sortOrder"
+						},
+						"kind": "TASK",
+						"etag": "zta1sdnz",
+						"modifiedTime": "2025-07-08T09:10:15.147+0000",
+						"showType": 1,
+						"teamId": null,
+						"sortType": "sortOrder",
+						"groupId": "686cdb3bf0f9f538c8545f00",
+						"source": 1,
+						"id": "674412c8b1f27d3f8a87c3c2",
+						"inAll": true
+						}
+					],
+					"delete": []
+				}
+				*/
 			}
-			await this.tickTickSync.updateTaskContent(filePath);
+			await this.tickTickSync.updateTaskContent(filePath, projectId);
 			await this.cacheOperation.updateRenamedFilePath(oldPath, filePath);
 		});
 		return true;

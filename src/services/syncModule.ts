@@ -16,6 +16,7 @@ import { TaskDeletionModal } from '@/modals/TaskDeletionModal';
 import { getProjectGroups, getSettings, updateProjectGroups } from '@/settings';
 import { FileMap, getTitle, type ITaskItemRecord } from '@/services/fileMap';
 import log from 'loglevel';
+import type { IProjectGroup } from '@/api/types/ProjectGroup';
 
 type deletedTask = {
 	taskId: string,
@@ -1230,7 +1231,7 @@ export class SyncMan {
 	}
 
 	//After renaming the file, check all tasks in the file and update all links.
-	async updateTaskContent(filepath: string) {
+	async updateTaskContent(filepath: string, projectId?: string | null) {
 		const metadata = await this.plugin.cacheOperation?.getFileMetadata(filepath);
 		if (!metadata || !metadata.TickTickTasks) {
 			return;
@@ -1238,25 +1239,21 @@ export class SyncMan {
 		const taskURL = this.plugin.taskParser?.getObsidianUrlFromFilepath(filepath);
 		try {
 			for (const taskDetail of metadata.TickTickTasks) {
-				const task = await this.plugin.cacheOperation?.loadTaskFromCacheID(taskDetail.taskId);
-				if (task) {
-
-
-					task.title = task.title + ' ' + taskURL;
-					const updatedTask = await this.plugin.tickTickRestAPI?.UpdateTask(task);
-					//Cache the title without the URL because that's what we're going to do content compares on.
-					updatedTask.title = await this.plugin.taskParser?.stripOBSUrl(updatedTask.title);
-					await this.plugin.cacheOperation?.updateTaskToCache(updatedTask);
-				} else {
-					const error = 'Task: ' + taskDetail + 'from file: ' + filepath + 'not found.';
-					throw new Error(error);
+				const task = this.plugin.cacheOperation?.loadTaskFromCacheID(taskDetail.taskId);
+				if (!task) {
+					throw new Error(`Task: ${taskDetail} from file: ${filepath} not found.`);	
 				}
+				task.title = task.title + ' ' + taskURL;
+				if (projectId)
+					task.projectId = projectId;
+				const updatedTask = await this.plugin.tickTickRestAPI?.UpdateTask(task);
+				//Cache the title without the URL because that's what we're going to do content compares on.
+				updatedTask.title = await this.plugin.taskParser?.stripOBSUrl(updatedTask.title);
+				await this.plugin.cacheOperation?.updateTaskToCache(updatedTask);
 			}
 		} catch (error) {
 			log.error('An error occurred in updateTaskDescription:', error);
 		}
-
-
 	}
 
 	///End of Test
@@ -1434,13 +1431,20 @@ export class SyncMan {
 		return null; // Return null if no task or item is found for the given line number
 	}
 
-	async checkProjectGroups(dir: string, oldDir: string) {
+	async checkProjectGroups(dir: string, oldDir: string): Promise<IProjectGroup | null> {
 		const projectGroups = getProjectGroups();
 		const projectGroup = projectGroups.find((group) => group.name === dir);
-		if (!projectGroup) {
-			await this.plugin.tickTickRestAPI?.createProjectGroup(dir);
+		if (projectGroup) return projectGroup;
+		//create new
+		const result = await this.plugin.tickTickRestAPI?.createProjectGroup(dir);
+		if (!result){
+			log.error('Error creating project group: ', dir);
+			return null;
 		}
-		updateProjectGroups(projectGroups);
+		this.syncTickTickToObsidian() //TODO: optimize
+		const res = getProjectGroups().find((group) => group.name === dir);
+		if (res) return res;
+		return null;
 	}
 
 }

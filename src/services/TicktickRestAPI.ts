@@ -416,10 +416,9 @@ export class TickTickRestAPI {
 		// log.debug('moveResult of moveResult', moveResult);
 	}
 
-	async createProjectGroup(name: string) {
+	async createProjectGroup(name: string): Promise<boolean> {
 		await this.initializeAPI();
-		const result = await this.api?.createProjectGroup(name);
-		return result;
+		return !!(await this.api?.createProjectGroup(name));
 	}
 
 }
